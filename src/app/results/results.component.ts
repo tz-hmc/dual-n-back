@@ -1,11 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-
-export type Result = {
-  AudioTP: number,
-  PostionTP: number,
-  AudioFP: number,
-  PositionFP: number
-}
+import { Result } from '../game-grade-util';
 
 @Component({
   selector: 'app-results',
