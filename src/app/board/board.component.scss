@@ -1,0 +1,25 @@
+:host {
+    --square-width: 200px;
+    --gap-width: 10px;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+}
+
+.auto {
+    margin: auto;
+}
+
+#grid {
+    display: grid;
+    grid-template-rows: var(--square-width) var(--square-width) var(--square-width);
+    grid-template-columns: var(--square-width) var(--square-width) var(--square-width);
+    grid-row-gap: var(--gap-width);
+    grid-column-gap: var(--gap-width);
+}
+
+#grid > div {
+    background-color: lightgray;
+}

@@ -1,0 +1,8 @@
+<mat-form-field appearance="fill">
+  <mat-label>N-Back Level</mat-label>
+  <mat-select [(value)]="Settings.nback" name="N-Back" (selectionChange)="onNBackChange()">
+    <mat-option *ngFor="let n of NBackLevels" [value]="n">
+      {{n}}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
