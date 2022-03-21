@@ -1,6 +1,9 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
-import { givenNumberGenerate } from '../game-generation-util';
+import { Component, EventEmitter, HostListener, OnInit, Output, ViewChild } from '@angular/core';
+import { MatDrawer } from '@angular/material/sidenav';
+import { GivenNumberGenerate } from '../game-generation-util';
 import { gradePlayerInput, Result } from '../game-grade-util';
+import { ResultDataSource } from '../result-data-source';
+import { GenerationType, Settings } from '../settings/settings.component';
 
 @Component({
   selector: 'app-board',
@@ -8,22 +11,21 @@ import { gradePlayerInput, Result } from '../game-grade-util';
   styleUrls: ['./board.component.scss']
 })
 export class BoardComponent implements OnInit {
-
   private currentGameStates: Array<{letter: string, position: number}> = [];
   private currentGameAnswers: Array<{audioMatch: boolean, positionMatch: boolean}> = [];
   private currentGameInputs: Array<{audioMatch: boolean, positionMatch: boolean}> = [];
+  private delayMs: number = 3000;
+  private turns: number = 20;
 
   private results: Array<Result> = [];
+  private resultDataSource: ResultDataSource = new ResultDataSource(this.results);
 
   private stateIndex: number = -1;
 
   constructor() { }
-
-  @Input() turns: number = 20;
-  @Input() mode: any = null;
-  @Input() delayMs: number = 3000;
   
   @Output() finish: EventEmitter<string> = new EventEmitter<string>();
+  @ViewChild(MatDrawer) drawer: MatDrawer;
 
   get CurrentPosition() {
     return this.gameIsPlaying() ? this.currentGameStates[this.stateIndex].position : -1;
@@ -33,21 +35,31 @@ export class BoardComponent implements OnInit {
     return this.gameIsPlaying() ? this.currentGameStates[this.stateIndex].letter : '';
   }
 
+  get Results() {
+    return this.resultDataSource;
+  }
+
   get IsPlaying() {
     return this.gameIsPlaying();
   }
 
   ngOnInit(): void {
-    
   }
 
   // call from outside with ref
-  play() {
+  play(settings: Settings) {
     console.log('begin');
-    let {gameStates, gameAnswers} = givenNumberGenerate(this.turns, 1, 5, 5);
+
+    let { gameStates, gameAnswers } = (settings.generationType === GenerationType.Limited) ? 
+        GivenNumberGenerate(settings.trials, settings.nBack, settings.audioMatchNumber, settings.positionMatchNumber)
+      : { gameStates: [], gameAnswers: [] }; //RandomGenerate();
     this.currentGameStates = gameStates;
     this.currentGameAnswers = gameAnswers;
+    this.delayMs = settings.intervalMs;
+    this.turns = settings.trials;
+
     this.stateIndex = 0;
+    this.drawer.close();
     this.playSound();
   }
 
@@ -94,11 +106,13 @@ export class BoardComponent implements OnInit {
   }
 
   gameFinishCallback() {
-    this.results.push(gradePlayerInput(this.currentGameInputs, this.currentGameAnswers));
+    this.results = [...this.results, gradePlayerInput(this.currentGameInputs, this.currentGameAnswers)];
+    this.resultDataSource.setData(this.results);
     console.log(this.currentGameStates);
     console.log(this.currentGameInputs);
-    console.log(this.results);
+    console.log(this.resultDataSource);
     this.clearCurrentGame();
+    this.drawer.open();
   }
 
   clearCurrentGame() {

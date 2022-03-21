@@ -1,1 +1,34 @@
-<p>results works!</p>
+<h3>results</h3>
+<table mat-table [dataSource]="Datasource" class="mat-elevation-z8">
+    <!-- Position Column -->
+    <ng-container matColumnDef="audioTPR">
+        <th mat-header-cell *matHeaderCellDef>Audio TPR </th>
+        <td mat-cell *matCellDef="let element">
+            {{element.audioTP}}/{{(element.audioTP + element.audioFN)}} 
+            ({{element.audioTP/(element.audioTP + element.audioFN)}}%)
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="positionTPR">
+        <th mat-header-cell *matHeaderCellDef>Pos TPR </th>
+        <td mat-cell *matCellDef="let element">
+            {{element.positionTP}}/{{(element.positionTP + element.positionFN)}} 
+            ({{element.positionTP/(element.positionTP + element.positionFN)}}%)
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="audioFPR">
+        <th mat-header-cell *matHeaderCellDef>Audio FPR </th>
+        <td mat-cell *matCellDef="let element">
+            {{element.audioFP}}/{{(element.audioFP + element.audioTN)}} 
+            ({{element.audioFP/(element.audioFP + element.audioTN)}}%)
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="positionFPR">
+        <th mat-header-cell *matHeaderCellDef>Pos FPR </th>
+        <td mat-cell *matCellDef="let element">
+            {{element.positionFP}}/{{(element.positionFP + element.positionTN)}} 
+            ({{element.positionFP/(element.positionFP + element.positionTN)}}%)
+        </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="DisplayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: DisplayedColumns;"></tr>
+</table>

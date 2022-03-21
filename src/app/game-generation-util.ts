@@ -16,14 +16,6 @@ const RETRIES = 10;
 //   return generated;
 // };
 
-const generateElements = (enumerable: any) => {
-  let arr = new Array<any>();
-  for (var i = 0; i < enumerable.length; i++) {
-    arr.push({ index: i, value: enumerable[i] });
-  }
-  return arr;
-};
-
 const generateElementsFromNum = (number: number) => {
   let arr = new Array<any>();
   for (var i = 0; i < number; i++) {
@@ -32,112 +24,169 @@ const generateElementsFromNum = (number: number) => {
   return arr;
 };
 
-const pickFromElements = (elements: Array<any>, nback: number) => {
+const pickRandom = (elements: Array<any>, nback: number) => {
   let i = Math.floor(Math.random() * (elements.length - nback));
-  let valueNAfter = elements.splice(i + nback, 1)[0];
-  let value = elements.splice(i, 1)[0];
-  // Also remove the NBefore element, it cant be used in the future either
-  if (i - nback >= 0) elements.splice(i - nback, 1);
-  return { value, valueNAfter };
-};
+  return elements[i];
+}
 
-// TODO: there are a lot of bugs with this, fix
-export const givenNumberGenerate = (
+const pick = (elements: Array<any>, element: number) => {
+  const idx = elements.indexOf(element);
+  if (idx >= 0) {
+    elements.splice(idx, 1);
+  }
+}
+
+const pickMatchWithGenerator = (turnElements: Array<number>, count: number, turns: number, nBack: number,
+  generated: Array<any>, matchPositions: Array<any>,
+  generator: () => any, valueKey: string,
+  matchKey: string) => {
+  let value = generator();
+  let pickedTurn = pickRandom(turnElements, nBack);
+  let nForwardTurn = pickedTurn + nBack;
+  let nBackwardTurn = pickedTurn - nBack;
+  let currentElement = {...generated[pickedTurn], [valueKey]: value};
+  let nForwardElement = generated[nForwardTurn];
+  let nBackwardElement = generated[nBackwardTurn];
+  // see if match already exists from prev chosen elements, in that case we don't need to do anything
+  if(!!nForwardElement && !!nBackwardElement &&
+      nForwardElement[valueKey] === value && nBackwardElement[valueKey] === value
+      && count >= 2) {
+    count -= 2;
+    generated[pickedTurn] = currentElement;
+    pick(turnElements, pickedTurn);
+    matchPositions[pickedTurn] = {...matchPositions[pickedTurn], [matchKey]: true};
+    matchPositions[nForwardTurn] = {...matchPositions[nForwardTurn], [matchKey]: true};
+  }
+  else if(!!nForwardElement && nForwardElement[valueKey] === value) {
+    count -= 1;
+    generated[pickedTurn] = currentElement;
+    pick(turnElements, pickedTurn);
+    matchPositions[nForwardTurn] = {...matchPositions[nForwardTurn], [matchKey]: true};
+  }
+  else if(!!nBackwardElement && nBackwardElement[valueKey] === value) {
+    count -= 1;
+    generated[pickedTurn] = currentElement;
+    pick(turnElements, pickedTurn);
+    matchPositions[pickedTurn] = {...matchPositions[pickedTurn], [matchKey]: true};
+  }
+  // no match so far, create a match
+  // whenever we pick an element, current or back/forward, need to check if it creates other matches
+  else if(nBackwardTurn >= 0 && !nBackwardElement?.[valueKey]) {
+    const nBackBackwardTurn = nBackwardTurn - nBack;
+    const nBackBackwardElement = generated[nBackBackwardTurn];
+    if(currentElement[valueKey] === nBackBackwardElement?.[valueKey] && count >= 2) {
+      count -= 2;
+      generated[pickedTurn] = currentElement;
+      generated[nBackwardTurn] = {...generated[nBackwardTurn], [valueKey]: currentElement[valueKey]};
+      pick(turnElements, pickedTurn);
+      pick(turnElements, nBackwardTurn);
+      matchPositions[pickedTurn] = {...matchPositions[pickedTurn], [matchKey]: true};
+      matchPositions[nBackwardTurn] = {...matchPositions[nBackwardTurn], [matchKey]: true};
+    }
+    else if (currentElement[valueKey] !== nBackBackwardElement?.[valueKey]) {
+      count -= 1;
+      generated[pickedTurn] = currentElement;
+      generated[nBackwardTurn] = {...generated[nBackwardTurn], [valueKey]: currentElement[valueKey]};
+      pick(turnElements, pickedTurn);
+      pick(turnElements, nBackwardTurn);
+      matchPositions[pickedTurn] = {...matchPositions[pickedTurn], [matchKey]: true};
+    }
+  }
+  else if(nForwardTurn < turns && !nForwardElement?.[valueKey]) {
+    const nForForwardTurn = nForwardTurn + nBack;
+    const nForForwardElement = generated[nForForwardTurn];
+    if(currentElement[valueKey] === nForForwardElement?.[valueKey] && count >= 2) {
+      count -= 2;
+      generated[pickedTurn] = currentElement;
+      generated[nForwardTurn] = {...generated[nForwardTurn], [valueKey]: currentElement[valueKey]};
+      pick(turnElements, nForwardTurn);
+      pick(turnElements, pickedTurn);
+      matchPositions[nForwardTurn] = {...matchPositions[nForwardTurn], [matchKey]: true};
+      matchPositions[nForForwardTurn] = {...matchPositions[nForForwardTurn], [matchKey]: true};
+    }
+    else if (currentElement[valueKey] !== nForForwardElement?.[valueKey]) {
+      count -= 1;
+      generated[pickedTurn] = currentElement;
+      generated[nForwardTurn] = {...generated[nForwardTurn], [valueKey]: currentElement[valueKey]};
+      pick(turnElements, nForwardTurn);
+      pick(turnElements, pickedTurn);
+      matchPositions[nForwardTurn] = {...matchPositions[nForwardTurn], [matchKey]: true};
+    }
+  }
+  else {} // this turn can't be used to create a match
+  return count;
+}
+
+const pickUnmatchWithGenerator = (pickedTurn: number, nBack: number,
+  generated: Array<any>, matchPositions: Array<any>,
+  generator: () => any, valueKey: string,
+  matchKey: string) => {
+  let nForwardTurn = pickedTurn + nBack;
+  let nBackwardTurn = pickedTurn - nBack;
+  let nForwardElement = generated[nForwardTurn];
+  let nBackwardElement = generated[nBackwardTurn];
+
+  let retries = RETRIES;
+  let value = generator();
+  let currentElement = {...generated[pickedTurn], [valueKey]: value};
+  let invalid = (!!nForwardElement && nForwardElement[valueKey] === value) || (!!nBackwardElement && nBackwardElement[valueKey] === value);
+  // Try to avoid any matches
+  while(invalid && retries > 0) {
+    value = generator();
+    currentElement = {...generated[pickedTurn], [valueKey]: value};
+    invalid = (!!nForwardElement && nForwardElement[valueKey] === value) || (!!nBackwardElement && nBackwardElement[valueKey] === value);
+    retries -= 1;
+  }
+
+  if(!invalid) {
+    generated[pickedTurn] = currentElement;
+    matchPositions[pickedTurn] = {...matchPositions[pickedTurn], [matchKey]: false};
+  }
+}
+
+export const GivenNumberGenerate = (
   turns: number,
   nBack: number,
   audioMatchNumber: number,
   positionMatchNumber: number
 ) => {
-  let gameStates: Array<{ letter: string; position: number }> = [];
-  let gameAnswers: Array<{ audioMatch: boolean; positionMatch: boolean }> = [];
-  let pickedIndices: Array<{ letterI: number; positionI: number }> = [];
-  // generate random turn index and letter for audio, set its match nBack turns away
+  let gameStates: Array<{letter: string, position: number}> = [];
+  let gameAnswers: Array<{audioMatch: boolean, positionMatch: boolean}> = [];
+  // Generate letter matches
+  let turnElements = generateElementsFromNum(turns);
   let count = audioMatchNumber;
-  let turnElements = generateElementsFromNum(turns - nBack);
   while (count > 0) {
-    let letterI = Math.floor(Math.random() * letters.length);
-    let { value, valueNAfter } = pickFromElements(turnElements, nBack);
-    pickedIndices[value] = { letterI, positionI: -1 };
-    pickedIndices[valueNAfter] = { letterI, positionI: -1 };
-    gameAnswers[valueNAfter] = {
-      ...gameAnswers[valueNAfter],
-      audioMatch: true,
-    };
-    count -= 1;
+    count = pickMatchWithGenerator(turnElements, count, turns, nBack, gameStates, gameAnswers,
+      () => letters.charAt(Math.floor(Math.random() * letters.length)), "letter",
+      "audioMatch");
   }
-  // generate random turn index and position, set its match nBack turns away
+  // Generate position matches
+  turnElements = generateElementsFromNum(turns);
   count = positionMatchNumber;
-  turnElements = generateElementsFromNum(turns - nBack);
   while (count > 0) {
-    let positionI = Math.floor(Math.random() * positionIds.length);
-    let { value, valueNAfter } = pickFromElements(turnElements, nBack);
-    pickedIndices[value] = {
-      letterI: pickedIndices[value]?.letterI ?? -1,
-      positionI,
-    };
-    pickedIndices[valueNAfter] = {
-      letterI: pickedIndices[valueNAfter]?.letterI ?? -1,
-      positionI,
-    };
-    gameAnswers[valueNAfter] = {
-      ...gameAnswers[valueNAfter],
-      positionMatch: true,
-    };
-    count -= 1;
+    count = pickMatchWithGenerator(turnElements, count, turns, nBack, gameStates, gameAnswers,
+      () => positionIds[Math.floor(Math.random() * positionIds.length)], "position",
+      "positionMatch");
   }
-  // Generate game states, if there are missing indices, fill them in
-  for (let i = 0; i < turns; i++) {
-    // do not create any extra matches
-    let val = pickedIndices[i];
-
-    let invalidPositions = new Set();
-    let invalidLetters = new Set();
-    if (i + nBack < pickedIndices.length) {
-      if (pickedIndices[i + nBack]?.positionI >= 0)
-        invalidPositions.add(pickedIndices[i + nBack].positionI);
-      if (pickedIndices[i + nBack]?.letterI >= 0)
-        invalidLetters.add(pickedIndices[i + nBack].letterI);
+  // Fill in the rest
+  for(var i = 0; i < turns; i += 1) {
+    if(!gameStates[i]?.letter) {
+      pickUnmatchWithGenerator(i, nBack, gameStates, gameAnswers,
+        () => letters.charAt(Math.floor(Math.random() * letters.length)), "letter",
+        "audioMatch");
     }
-    if (i - nBack >= 0) {
-      if (pickedIndices[i - nBack]?.positionI >= 0)
-        invalidPositions.add(pickedIndices[i - nBack].positionI);
-      if (pickedIndices[i - nBack]?.letterI >= 0)
-        invalidLetters.add(pickedIndices[i - nBack].letterI);
+    if(!gameStates[i]?.position) {
+      pickUnmatchWithGenerator(i, nBack, gameStates, gameAnswers,
+        () => positionIds[Math.floor(Math.random() * positionIds.length)], "position",
+        "positionMatch");
     }
-
-    let pickRetries = RETRIES;
-    if (!val || val?.letterI < 0) {
-      let letterI = Math.floor(Math.random() * letters.length);
-      while (pickRetries > 0 && letterI in invalidLetters) {
-        pickRetries -= 1;
-        letterI = Math.floor(Math.random() * letters.length);
-      }
-      pickedIndices[i] = { ...pickedIndices[i], letterI };
+    if(!gameAnswers[i]?.audioMatch) {
+      gameAnswers[i] = {...gameAnswers[i], audioMatch: false};
     }
-    pickRetries = RETRIES;
-    if (!val || val?.positionI < 0) {
-      let positionI = Math.floor(Math.random() * positionIds.length);
-      while (pickRetries > 0 && positionI in invalidPositions) {
-        pickRetries -= 1;
-        positionI = Math.floor(Math.random() * positionIds.length);
-      }
-      pickedIndices[i] = { ...pickedIndices[i], positionI };
-    }
-
-    gameStates.push({
-      letter: letters.charAt(pickedIndices[i].letterI),
-      position: positionIds[pickedIndices[i].positionI],
-    });
-  }
-  // set the game answers
-  for (let i = 0; i < turns; i++) {
-    if (!gameAnswers[i]?.audioMatch) {
-      gameAnswers[i] = { ...gameAnswers[i], audioMatch: false };
-    }
-    if (!gameAnswers[i]?.positionMatch) {
-      gameAnswers[i] = { ...gameAnswers[i], positionMatch: false };
+    if(!gameAnswers[i]?.positionMatch) {
+      gameAnswers[i] = {...gameAnswers[i], positionMatch: false};
     }
   }
-
+  console.log(gameStates);
   return { gameStates, gameAnswers };
 };

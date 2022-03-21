@@ -1,18 +1,41 @@
-<button (click)="play()">Play</button>
-
-<div class="container" *ngIf="IsPlaying">
-    <div id="grid" class="auto">
-        <div><mat-icon *ngIf="CurrentPosition === 1">pan_tool</mat-icon>{{CurrentLetter}}</div>
-        <div><mat-icon *ngIf="CurrentPosition === 2">pan_tool</mat-icon>{{CurrentLetter}}</div>
-        <div><mat-icon *ngIf="CurrentPosition === 3">pan_tool</mat-icon>{{CurrentLetter}}</div>
-        <div><mat-icon *ngIf="CurrentPosition === 4">pan_tool</mat-icon>{{CurrentLetter}}</div>
-        <div><mat-icon *ngIf="CurrentPosition === 5">pan_tool</mat-icon>{{CurrentLetter}}</div>
-        <div><mat-icon *ngIf="CurrentPosition === 6">pan_tool</mat-icon>{{CurrentLetter}}</div>
-        <div><mat-icon *ngIf="CurrentPosition === 7">pan_tool</mat-icon>{{CurrentLetter}}</div>
-        <div><mat-icon *ngIf="CurrentPosition === 8">pan_tool</mat-icon>{{CurrentLetter}}</div>
-        <div><mat-icon *ngIf="CurrentPosition === 9">pan_tool</mat-icon>{{CurrentLetter}}</div>
-    </div>
+<mat-toolbar color="primary">
+  <button mat-icon-button (click)="drawer.toggle()">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>Dual N Back</span>
+  <span class="example-spacer"></span>
+  <!-- <button mat-icon-button class="example-icon favorite-icon" aria-label="Example icon-button with heart icon">
+     <mat-icon>favorite</mat-icon>
+   </button>
+   <button mat-icon-button class="example-icon" aria-label="Example icon-button with share icon">
+    <mat-icon>share</mat-icon>
+  </button> -->
+</mat-toolbar>
+<div class="content">
+    <mat-drawer-container autosize>
+        <mat-drawer #drawer class="sidenav" mode="side">
+            <app-results [results]="Results"></app-results>
+            <app-settings (playWithSettings)="play($event)"></app-settings>
+        </mat-drawer>
+    
+        <div class="sidenav-content center">
+            <div class="container"><!--*ngIf="IsPlaying"-->
+                <div id="grid" class="auto">
+                    <div><mat-icon *ngIf="CurrentPosition === 1">pan_tool</mat-icon>{{CurrentLetter}}</div>
+                    <div><mat-icon *ngIf="CurrentPosition === 2">pan_tool</mat-icon>{{CurrentLetter}}</div>
+                    <div><mat-icon *ngIf="CurrentPosition === 3">pan_tool</mat-icon>{{CurrentLetter}}</div>
+                    <div><mat-icon *ngIf="CurrentPosition === 4">pan_tool</mat-icon>{{CurrentLetter}}</div>
+                    <div><mat-icon *ngIf="CurrentPosition === 5">pan_tool</mat-icon>{{CurrentLetter}}</div>
+                    <div><mat-icon *ngIf="CurrentPosition === 6">pan_tool</mat-icon>{{CurrentLetter}}</div>
+                    <div><mat-icon *ngIf="CurrentPosition === 7">pan_tool</mat-icon>{{CurrentLetter}}</div>
+                    <div><mat-icon *ngIf="CurrentPosition === 8">pan_tool</mat-icon>{{CurrentLetter}}</div>
+                    <div><mat-icon *ngIf="CurrentPosition === 9">pan_tool</mat-icon>{{CurrentLetter}}</div>
+                </div>
+                <div class="flex-row">
+                    <button mat-button color="secondary">audio match</button>
+                    <button mat-button color="secondary">position match</button>
+                </div>
+            </div>
+        </div>
+    </mat-drawer-container>
 </div>
-
-<app-results></app-results>
-<app-settings></app-settings>

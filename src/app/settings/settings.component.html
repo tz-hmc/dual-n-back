@@ -1,8 +1,35 @@
-<mat-form-field appearance="fill">
-  <mat-label>N-Back Level</mat-label>
-  <mat-select [(value)]="Settings.nback" name="N-Back" (selectionChange)="onNBackChange()">
-    <mat-option *ngFor="let n of NBackLevels" [value]="n">
-      {{n}}
-    </mat-option>
-  </mat-select>
-</mat-form-field>
+<h3>settings</h3>
+<form [formGroup]="settingsForm" (ngSubmit)="onPlay(settingsForm)">
+  <div class="pad-item">
+    <div class="label">N Back level:</div>
+    <input formControlName="nBack" type="number"/>
+  </div>
+  <div class="pad-item">
+    <div class="label">Number of trials:</div>
+    <input formControlName="trials" type="number"/>
+  </div>
+  <div class="pad-item">
+    <div class="label">Turn interval (ms):</div>
+    <input formControlName="intervalMs" type="number"/>
+  </div>
+  <div class="pad-item">
+    <div class="label">Generation:</div>
+    <select formControlName="generationType">
+      <option *ngFor="let value of GenerationTypes" [value]="value">{{value}}</option>
+    </select>
+  </div>
+  <div class="pad-item" *ngIf="IsLimitedGeneration">
+    <div class="label">Number of audio matches:</div>
+    <input formControlName="audioMatchNumber" type="number"/>
+  </div>
+  <div class="pad-item" *ngIf="IsLimitedGeneration">
+    <div class="label">Number of position matches:</div>
+    <input formControlName="positionMatchNumber" type="number"/>
+  </div>
+  <div class="pad-item">
+    <button type="submit" color="primary">
+      <div class="center">play</div><mat-icon>arrow_right</mat-icon>
+    </button>
+  </div>
+  
+</form>

@@ -1,36 +1,23 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
 
-export type State = {
-  letter: any,
-  position: number
+export enum GenerationType {
+  Random = "Random",
+  Limited = "Limited"
 }
 
 export type Settings = {
-  nback: number,
+  nBack: number,
   intervalMs: number,
   trials: number,
-  soundVolume: number,
-  keypressEventName: {
-    AudioMatch: any,
-    PositionMatch: any
-  },
-  useRandom: boolean,
+  // soundVolume: number,
+  // keypressEventName: {
+  //   AudioMatch: any,
+  //   PositionMatch: any
+  // },
+  generationType: GenerationType,
   audioMatchNumber: number,
   positionMatchNumber: number,
-}
-
-const DEFAULT_SETTINGS: Settings = {
-  nback: 1,
-  intervalMs: 3000,
-  trials: 24,
-  soundVolume: 50,
-  keypressEventName: {
-    AudioMatch: 'window:keydown.a',
-    PositionMatch: 'window:keydown.l'
-  },
-  useRandom: false,
-  audioMatchNumber: 12,
-  positionMatchNumber: 12
 }
 
 @Component({
@@ -40,25 +27,38 @@ const DEFAULT_SETTINGS: Settings = {
 })
 export class SettingsComponent implements OnInit {
   private nBackLevels: Array<number> = [1, 2, 3, 4, 5];
-  private settings: Settings = DEFAULT_SETTINGS;
 
+  public settingsForm = new FormGroup({
+    nBack: new FormControl(2),
+    trials: new FormControl(24),
+    intervalMs: new FormControl(3000),
+    generationType: new FormControl(GenerationType.Limited),
+    audioMatchNumber: new FormControl(5),
+    positionMatchNumber: new FormControl(5)
+  });
+  
   constructor() { }
 
   get NBackLevels() {
     return this.nBackLevels;
   }
 
-  get Settings() {
-    return this.settings;
+  get GenerationTypes() {
+    return Object.keys(GenerationType);
   }
 
-  @Output() changeSetting: EventEmitter<Settings> = new EventEmitter<Settings>();
+  get IsLimitedGeneration() {
+    return this.settingsForm.get("generationType")?.value === GenerationType.Limited;
+  }
+
+  @Output() playWithSettings: EventEmitter<Settings> = new EventEmitter<Settings>();
 
   ngOnInit(): void {
 
   }
 
-  onNBackChange() {
-    this.changeSetting.emit(this.settings);
+  onPlay(settingsForm: FormGroup) {
+    console.log(settingsForm);
+    this.playWithSettings.emit(this.settingsForm.value);
   }
 }
