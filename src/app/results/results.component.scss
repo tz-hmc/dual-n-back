@@ -33,3 +33,16 @@ td.mat-header-cell {
 th.mat-header-cell {
     padding: 4px 8px 4px 8px;
 }
+
+td.mat-cell {
+    padding: 3px;
+    text-align: center;
+}
+
+span.good {
+    color: green;
+}
+
+span.bad {
+    color: red;
+}

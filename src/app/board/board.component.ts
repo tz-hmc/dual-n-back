@@ -1,9 +1,10 @@
 import { Component, EventEmitter, HostListener, OnInit, Output, ViewChild } from '@angular/core';
 import { MatDrawer } from '@angular/material/sidenav';
 import { GivenNumberGenerate } from '../game-generation-util';
-import { gradePlayerInput, Result } from '../game-grade-util';
+import { gradePlayerInput, Result, ResultRow, toResultRow } from '../game-grade-util';
 import { ResultDataSource } from '../result-data-source';
 import { GenerationType, Settings } from '../settings/settings.component';
+import { audioSprites, playAllSounds } from '../game-audio-util';
 
 @Component({
   selector: 'app-board',
@@ -14,10 +15,11 @@ export class BoardComponent implements OnInit {
   private currentGameStates: Array<{letter: string, position: number}> = [];
   private currentGameAnswers: Array<{audioMatch: boolean, positionMatch: boolean}> = [];
   private currentGameInputs: Array<{audioMatch: boolean, positionMatch: boolean}> = [];
-  private delayMs: number = 3000;
-  private turns: number = 20;
+  private settings: Settings;
+  // private delayMs: number = 3000;
+  // private turns: number = 20;
 
-  private results: Array<Result> = [];
+  private results: Array<ResultRow> = [];
   private resultDataSource: ResultDataSource = new ResultDataSource(this.results);
 
   private stateIndex: number = -1;
@@ -49,14 +51,12 @@ export class BoardComponent implements OnInit {
   // call from outside with ref
   play(settings: Settings) {
     console.log('begin');
-
-    let { gameStates, gameAnswers } = (settings.generationType === GenerationType.Limited) ? 
-        GivenNumberGenerate(settings.trials, settings.nBack, settings.audioMatchNumber, settings.positionMatchNumber)
+    this.settings = settings;
+    let { gameStates, gameAnswers } = (this.settings.generationType === GenerationType.Limited) ? 
+        GivenNumberGenerate(this.settings.trials, this.settings.nBack, this.settings.audioMatchNumber, this.settings.positionMatchNumber)
       : { gameStates: [], gameAnswers: [] }; //RandomGenerate();
     this.currentGameStates = gameStates;
     this.currentGameAnswers = gameAnswers;
-    this.delayMs = settings.intervalMs;
-    this.turns = settings.trials;
 
     this.stateIndex = 0;
     this.drawer.close();
@@ -64,11 +64,28 @@ export class BoardComponent implements OnInit {
   }
 
   gameIsPlaying() {
-    return this.stateIndex >= 0 && this.stateIndex < this.turns;
+    return this.stateIndex >= 0 && this.stateIndex < this.settings.trials;
   }
 
   @HostListener('window:keydown.a',['$event'])
   keypressForA() {
+    this.audioMatch();
+  }
+
+  @HostListener('window:keydown.l',['$event'])
+  keypressForL() {
+    this.positionMatch();
+  }
+
+  clickAudioMatch() {
+    this.audioMatch();
+  }
+
+  clickPositionMatch() {
+    this.positionMatch();
+  }
+
+  audioMatch() {
     if(this.gameIsPlaying()) {
       this.currentGameInputs[this.stateIndex] = {
         ...this.currentGameInputs[this.stateIndex],
@@ -77,8 +94,7 @@ export class BoardComponent implements OnInit {
     }
   }
 
-  @HostListener('window:keydown.l',['$event'])
-  keypressForL() {
+  positionMatch() {
     if(this.gameIsPlaying()) {
       this.currentGameInputs[this.stateIndex] = {
         ...this.currentGameInputs[this.stateIndex],
@@ -89,15 +105,16 @@ export class BoardComponent implements OnInit {
 
   playSound() {
     // play sound
-    let letter, position = this.currentGameStates[this.stateIndex];
-    setTimeout(this.checkTurn.bind(this), this.delayMs);
+    let {letter, position} = this.currentGameStates[this.stateIndex];
+    audioSprites.play(letter);
+    setTimeout(this.checkTurn.bind(this), this.settings.intervalMs);
   }
 
   checkTurn() {
     // check & display error
     // update state index
     this.stateIndex += 1;
-    if(this.stateIndex < this.turns) {
+    if(this.stateIndex < this.settings.trials) {
       this.playSound();
     }
     else {
@@ -106,7 +123,9 @@ export class BoardComponent implements OnInit {
   }
 
   gameFinishCallback() {
-    this.results = [...this.results, gradePlayerInput(this.currentGameInputs, this.currentGameAnswers)];
+    this.results = [...this.results, 
+      toResultRow(gradePlayerInput(this.currentGameInputs, this.currentGameAnswers), this.settings.nBack)
+    ];
     this.resultDataSource.setData(this.results);
     console.log(this.currentGameStates);
     console.log(this.currentGameInputs);

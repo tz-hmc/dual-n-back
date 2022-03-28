@@ -1,3 +1,15 @@
+export type ResultRow = {
+    audioTP: number;
+    audioFP: number;
+    positionTP: number;
+    positionFP: number;
+    audioTN: number; 
+    audioFN: number;
+    positionTN: number;
+    positionFN: number;
+    nBackLevel: number;
+}
+
 export type Result = {
     audioTP: number;
     audioFP: number;
@@ -8,6 +20,10 @@ export type Result = {
     positionTN: number;
     positionFN: number;
 };
+
+export const toResultRow = (result: Result, nBackLevel: number) => {
+    return {...result, nBackLevel };
+}
 
 export const accuracy = (TP: number, TN: number, FN: number, FP: number) => (TP + TN)/(TP + TN + FN + FP);
 

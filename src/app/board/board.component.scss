@@ -38,10 +38,25 @@ mat-drawer-container, mat-drawer {
 
 #grid > div {
     background-color: lightgray;
+    display: flex;
+}
+
+.mb-10 {
+    margin-bottom: 20px;
 }
 
 .flex-row {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
+}
+
+.fs-20 {
+    font-size: 20px;
+}
+
+div.active {
+    background-color: cadetblue;
+    flex: 1 1 auto;
+    margin: 10px;
 }

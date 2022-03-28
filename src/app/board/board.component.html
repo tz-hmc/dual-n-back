@@ -4,36 +4,36 @@
   </button>
   <span>Dual N Back</span>
   <span class="example-spacer"></span>
-  <!-- <button mat-icon-button class="example-icon favorite-icon" aria-label="Example icon-button with heart icon">
-     <mat-icon>favorite</mat-icon>
+  <!-- <button div-button class="example-icon favorite-icon" aria-label="Example icon-button with heart icon">
+     <div>favorite</div>
    </button>
-   <button mat-icon-button class="example-icon" aria-label="Example icon-button with share icon">
-    <mat-icon>share</mat-icon>
+   <button div-button class="example-icon" aria-label="Example icon-button with share icon">
+    <div>share</div>
   </button> -->
 </mat-toolbar>
 <div class="content">
     <mat-drawer-container autosize>
-        <mat-drawer #drawer class="sidenav" mode="side">
+        <mat-drawer #drawer class="sidenav" mode="side" opened="true">
             <app-results [results]="Results"></app-results>
             <app-settings (playWithSettings)="play($event)"></app-settings>
         </mat-drawer>
     
         <div class="sidenav-content center">
-            <div class="container"><!--*ngIf="IsPlaying"-->
-                <div id="grid" class="auto">
-                    <div><mat-icon *ngIf="CurrentPosition === 1">pan_tool</mat-icon>{{CurrentLetter}}</div>
-                    <div><mat-icon *ngIf="CurrentPosition === 2">pan_tool</mat-icon>{{CurrentLetter}}</div>
-                    <div><mat-icon *ngIf="CurrentPosition === 3">pan_tool</mat-icon>{{CurrentLetter}}</div>
-                    <div><mat-icon *ngIf="CurrentPosition === 4">pan_tool</mat-icon>{{CurrentLetter}}</div>
-                    <div><mat-icon *ngIf="CurrentPosition === 5">pan_tool</mat-icon>{{CurrentLetter}}</div>
-                    <div><mat-icon *ngIf="CurrentPosition === 6">pan_tool</mat-icon>{{CurrentLetter}}</div>
-                    <div><mat-icon *ngIf="CurrentPosition === 7">pan_tool</mat-icon>{{CurrentLetter}}</div>
-                    <div><mat-icon *ngIf="CurrentPosition === 8">pan_tool</mat-icon>{{CurrentLetter}}</div>
-                    <div><mat-icon *ngIf="CurrentPosition === 9">pan_tool</mat-icon>{{CurrentLetter}}</div>
+            <div class="container">
+                <div id="grid" class="auto mb-10">
+                    <div><div *ngIf="CurrentPosition === 1" class="active"></div></div>
+                    <div><div *ngIf="CurrentPosition === 2" class="active"></div></div>
+                    <div><div *ngIf="CurrentPosition === 3" class="active"></div></div>
+                    <div><div *ngIf="CurrentPosition === 4" class="active"></div></div>
+                    <div><div *ngIf="CurrentPosition === 5" class="active"></div></div>
+                    <div><div *ngIf="CurrentPosition === 6" class="active"></div></div>
+                    <div><div *ngIf="CurrentPosition === 7" class="active"></div></div>
+                    <div><div *ngIf="CurrentPosition === 8" class="active"></div></div>
+                    <div><div *ngIf="CurrentPosition === 9" class="active"></div></div>
                 </div>
-                <div class="flex-row">
-                    <button mat-button color="secondary">audio match</button>
-                    <button mat-button color="secondary">position match</button>
+                <div class="flex-row"*ngIf="IsPlaying">
+                    <button mat-raised-button color="primary" (click)="clickAudioMatch()">audio match</button>
+                    <button mat-raised-button color="primary" (click)="clickPositionMatch()">position match</button>
                 </div>
             </div>
         </div>

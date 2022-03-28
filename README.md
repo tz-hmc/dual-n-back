@@ -26,3 +26,6 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 
 STILL WIP
 
+## Acknowledgments
+
+Audio sprites are from https://soundbible.com/2009-A-Z-Vocalized.html#google_vignette
