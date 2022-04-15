@@ -2,20 +2,6 @@ const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const positionIds = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const RETRIES = 10;
 
-// const randomGenerate = (turns: number) => {
-//   let count = turns;
-//   let letter = null;
-//   let posId = 0;
-//   let generated = [];
-//   while (count > 0) {
-//     letter = letters.charAt(Math.random() * letters.length);
-//     posId = positionIds[Math.floor(Math.random() * positionIds.length)];
-//     generated.push({letter: letter, position: posId});
-//     count -= 1;
-//   }
-//   return generated;
-// };
-
 const generateElementsFromNum = (number: number) => {
   let arr = new Array<any>();
   for (var i = 0; i < number; i++) {
@@ -24,11 +10,13 @@ const generateElementsFromNum = (number: number) => {
   return arr;
 };
 
-const pickRandom = (elements: Array<any>, nback: number) => {
+// pick random turn without replacement
+const getRandomTurn = (elements: Array<any>, nback: number) => {
   let i = Math.floor(Math.random() * (elements.length - nback));
   return elements[i];
 }
 
+// pick turn without replacement
 const pick = (elements: Array<any>, element: number) => {
   const idx = elements.indexOf(element);
   if (idx >= 0) {
@@ -41,7 +29,7 @@ const pickMatchWithGenerator = (turnElements: Array<number>, count: number, turn
   generator: () => any, valueKey: string,
   matchKey: string) => {
   let value = generator();
-  let pickedTurn = pickRandom(turnElements, nBack);
+  let pickedTurn = getRandomTurn(turnElements, nBack);
   let nForwardTurn = pickedTurn + nBack;
   let nBackwardTurn = pickedTurn - nBack;
   let currentElement = {...generated[pickedTurn], [valueKey]: value};
@@ -189,4 +177,38 @@ export const GivenNumberGenerate = (
   }
   console.log(gameStates);
   return { gameStates, gameAnswers };
+};
+
+const gradeRandomGenerate = (gameStates: Array<{letter: string, position: number}>, nback: number) => {
+  let gameAnswers: Array<{audioMatch: boolean, positionMatch: boolean}> = [];
+  gameStates.forEach((state, index) => {
+    let nBackI = index - nback;
+    if(nBackI >= 0) {
+      gameAnswers.push({
+        audioMatch: (state.letter === gameStates[nBackI].letter),
+        positionMatch: (state.position === gameStates[nBackI].position),
+      });
+    }
+    else {
+      gameAnswers.push({
+        audioMatch: false,
+        positionMatch: false,
+      });
+    }
+  });
+  return gameAnswers;
+}
+
+export const RandomGenerate = (turns: number, nBack: number) => {
+  let count = turns;
+  let letter = null;
+  let posId = 0;
+  let gameStates: Array<{letter: string, position: number}> = [];
+  while (count > 0) {
+    letter = letters.charAt(Math.random() * letters.length);
+    posId = positionIds[Math.floor(Math.random() * positionIds.length)];
+    gameStates.push({letter: letter, position: posId});
+    count -= 1;
+  }
+  return { gameStates, gameAnswers: gradeRandomGenerate(gameStates, nBack) };
 };

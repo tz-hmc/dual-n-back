@@ -1,6 +1,6 @@
 import { Component, EventEmitter, HostListener, OnInit, Output, ViewChild } from '@angular/core';
 import { MatDrawer } from '@angular/material/sidenav';
-import { GivenNumberGenerate } from '../game-generation-util';
+import { GivenNumberGenerate, RandomGenerate } from '../game-generation-util';
 import { gradePlayerInput, Result, ResultRow, toResultRow } from '../game-grade-util';
 import { ResultDataSource } from '../result-data-source';
 import { GenerationType, Settings } from '../settings/settings.component';
@@ -54,7 +54,7 @@ export class BoardComponent implements OnInit {
     this.settings = settings;
     let { gameStates, gameAnswers } = (this.settings.generationType === GenerationType.Limited) ? 
         GivenNumberGenerate(this.settings.trials, this.settings.nBack, this.settings.audioMatchNumber, this.settings.positionMatchNumber)
-      : { gameStates: [], gameAnswers: [] }; //RandomGenerate();
+      : RandomGenerate(this.settings.trials, this.settings.nBack);
     this.currentGameStates = gameStates;
     this.currentGameAnswers = gameAnswers;
 
@@ -124,10 +124,14 @@ export class BoardComponent implements OnInit {
 
   gameFinishCallback() {
     this.results = [...this.results, 
-      toResultRow(gradePlayerInput(this.currentGameInputs, this.currentGameAnswers), this.settings.nBack)
+      toResultRow(
+        gradePlayerInput(this.currentGameInputs, this.currentGameAnswers),
+        this.settings.nBack
+      )
     ];
     this.resultDataSource.setData(this.results);
     console.log(this.currentGameStates);
+    console.log(this.currentGameAnswers);
     console.log(this.currentGameInputs);
     console.log(this.resultDataSource);
     this.clearCurrentGame();
